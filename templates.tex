@@ -1,0 +1,473 @@
+\documentclass{beamer}
+\usetheme{default}
+
+\usepackage{calc}
+\usepackage{forloop}
+
+\usepackage{tikz}
+
+\usepackage{lstcustom}
+
+% Important modifications of the custom file.  Escaping the symbol
+% dollar sign ($) in the code is necessary for compilation.
+
+\lstdefinestyle{eclipseNoBox}{
+  basicstyle={\lstfontfamily},
+  emphstyle=\bfseries,
+  keywordstyle=\color{keywordColor}\bfseries,
+  commentstyle=\markupComments,
+  stringstyle=\color{stringColor},
+  numberstyle=\color{lineNumberColor}\lstfontfamily,
+  morecomment=[s][\markupJavadocs]{/**}{*/}, % For Javadoc comments
+  showstringspaces=false,
+  numbers=none,
+}
+
+\lstset{
+  language=C++,
+  style=eclipseNoBox,
+  showspaces=false, 
+  numbers=left,
+  frame=lrtb,
+  captionpos=b,
+  breaklines=true,
+  % From http://tex.stackexchange.com/questions/116534/lstlisting-line-wrapping
+  postbreak=\raisebox{0ex}[0ex][0ex]{\ensuremath{\color{red}\hookrightarrow\space}},
+  escapechar=\$
+}
+
+
+\title{C++ Templates}
+\subtitle{Mark Royer}
+\date{}
+
+
+
+% Style for answers using exampleblock
+\setbeamertemplate{blocks}[rounded][shadow=false]
+\addtobeamertemplate{block begin}{\pgfsetfillopacity{0.8}}{\pgfsetfillopacity{1}}
+\setbeamercolor*{block title example}{fg=blue!50,bg= blue!10}
+\setbeamercolor*{block body example}{bg= blue!5}
+
+
+\usetikzlibrary{fit,calc,shadows}
+
+% Define styles for balloons and lines
+\tikzstyle{line} =    [draw]%, width=3pt]%rounded corners=3pt, -latex]
+\tikzstyle{balloon} = [draw, fill=blue!20, opacity=0.4, inner sep=5pt, rounded corners=2pt]
+\tikzstyle{comment} = [draw, fill=blue!70, text=white, text width=3cm, minimum height=1cm, rounded corners, drop shadow, align=left]
+
+% Command to place a TikZ anchor at the current position
+\newcommand{\tikzmark}[1]{%
+  \tikz[overlay,remember picture,baseline] \coordinate (#1) at (0,0) {};}
+
+% Command to draw a balloon over two anchors
+\newcommand<>{\balloon}[3][balloon]{%
+  \coordinate (c) at ($(#2)+(0, 5.445pt)$);
+  \node#4 (#1) [balloon, fit=(#3) (c)] {};}
+
+% Start for listing highlighting
+\newcommand\eh{%
+\tikz[remember picture,overlay]{
+  \coordinate (end highlight){};%
+  \draw[yellow,line width=14pt,opacity=0.3]
+    ([yshift=4pt]begin highlight) -- ([yshift=4pt]end highlight);}%
+}
+\newcommand{\bh}{%
+  \tikz[remember picture]\coordinate(begin highlight){};}
+
+\newcommand<>{\highlight}[2]{
+  \draw#3[yellow,line width=14pt,opacity=0.3]
+    ([yshift=4pt]#1) -- ([yshift=4pt]#2);%
+}
+
+% End for listing highlighting
+
+% According to this
+% http://tex.stackexchange.com/questions/165929/semiverbatim-with-tikz-in-beamer
+% The following may cause issues in some documents, but it won't
+% compile without it!
+\makeatletter
+\global\let\tikz@ensure@dollar@catcode=\relax
+\makeatother
+
+\begin{document}
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+
+\begin{frame}
+  \titlepage
+\end{frame}
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+
+\begin{frame}
+  %\fontsize{16}{26}\selectfont
+  Features in C++ that help to generalize code
+  \begin{itemize}
+    \item \textbf{Overload functions}
+    \item \textbf{Template functions}
+    \item \textbf{Template classes}
+  \end{itemize}
+\end{frame}
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+
+\begin{frame}[fragile]{Overloaded functions}
+C++ allows you to \textbf{overload} functions using the same name with
+different parameter lists.
+
+For example, you can write two swap functions in your program: one to
+swap \tikzmark{swapints}integers and one to swap \tikzmark{swapstrings}strings.
+\begin{columns}
+\column[t]{0.5\textwidth}
+\begin{lstlisting}[frame=lrbt]
+ $\tikzmark{swapint1}$void swap (int& var1, 
+            int& var2) {$\tikzmark{swapint2}$
+  int temp = var1;
+  var1 = var2;
+  var2 = temp;
+}
+\end{lstlisting}
+\column[t]{0.5\textwidth}
+\begin{lstlisting}[frame=lbrt]
+ $\tikzmark{swapstring1}$void swap (string& var1, 
+            string& var2) {$\tikzmark{swapstring2}$
+  string temp = var1;
+  var1 = var2;
+  var2 = temp;
+}
+\end{lstlisting}
+\end{columns}
+
+The only operator needed to do a swap is
+assignment (=).
+
+\begin{tikzpicture}[overlay,remember picture]
+  \balloon<1>{swapint1}{swapint2};
+  \balloon<2>{swapstring1}{swapstring2};
+  \path<1>[black, line width=2pt, ->] (swapints.south) edge [out=270, in=90] (balloon.north);
+  \path<2>[black, line width=2pt, ->] (swapstrings.south) edge [out=270, in=90] (balloon.north);
+\end{tikzpicture}
+
+\end{frame}
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+
+
+\begin{frame}[fragile]{Rule on overloading functions}
+\begin{itemize}
+\item Functions must differ in their signatures (ie., parameter lists).
+
+\item It is not sufficient for the functions to differ only in the
+  return type.  The compiler cannot determine which function to call
+  if the function parameter data types are convertible.
+\end{itemize}
+
+\begin{lstlisting}
+int function (int n);
+char function (int n);
+
+// ...
+
+cout << $\tikzmark{overload1}$function(2);$\tikzmark{overload2}$ 
+\end{lstlisting}
+
+
+\begin{tikzpicture}[overlay,remember picture]
+  \balloon<1>{overload1}{overload2};
+  \node (comment) [comment] at (.8\textwidth, .2\textheight) {%
+    Can not determine the function
+  };
+  \path<1>[black, line width=2pt, ->] (comment.west) edge [out=180, in=0] (balloon.east);
+\end{tikzpicture}
+
+\end{frame}
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+
+
+\begin{frame}[fragile]{Template functions}
+
+\begin{itemize}
+\item C++ introduced the template as a language construct to facilitate
+creation of generic functions and classes.
+
+\item A template is instantiated with a particular data type.  (Think
+  find \& replace)
+
+\item The fully defined function is created and
+  inserted into the code.
+\end{itemize}
+
+\begin{lstlisting}
+// File: tswap.h
+
+template <typename T>
+void tswap (T& var1, T& var2) {
+  T temp = var1;
+  var1 = var2;
+  var2 = temp;
+}
+\end{lstlisting}
+
+\end{frame}
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+
+\begin{frame}[fragile]{Template functions}
+
+\begin{lstlisting}
+// File: $\tikzmark{template1}$tswap.h$\tikzmark{template2}$
+$\tikzmark{template3}$template <$\tikzmark{template4}$typename$\tikzmark{template5}$ $\tikzmark{template6}$T$\tikzmark{template7}$>$\tikzmark{template8}$
+void tswap (T& var1, T& var2) {
+  T temp = var1;
+  var1 = var2;
+  var2 = temp;
+}
+\end{lstlisting}
+\begin{tikzpicture}[overlay,remember picture]
+  \highlight<1>{template3}{template8};
+  \highlight<2>{template4}{template5}; 
+  \highlight<3>{template6}{template7}; 
+  \highlight<4>{template1}{template2}; 
+\end{tikzpicture}
+
+\vspace{-2em}
+
+\begin{itemize}
+\item The syntax \lstinline$template<typename T>$ precedes the function
+  definition. T is a sample identifier - use any identifier you like.
+
+\pause
+
+\item Alternative syntax is \lstinline$template <class T>$. This use of the word
+  class has nothing to do with the C++ class construct.
+
+\pause
+
+\item Type T is used within the function code.  It will be
+  instantiated with a real data type.
+
+\pause
+
+\item Templated functions and classes belong in header files because they
+  are not fully defined until they are instantiated.
+\end{itemize}
+
+\end{frame}
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+
+\begin{frame}[fragile]{Using tswap function}
+\begin{lstlisting}[style=eclipse]
+#include <iostream>
+#include <string>
+#include "tswap.h"
+using namespace std;
+
+int main () {
+  int n1 = 4, n2 = 7;
+  string w1 = "U", w2 = "D";
+  cout << n1 << n2 << endl;
+  $\tikzmark{tswap1}$tswap (n1, n2);$\tikzmark{tswap2}$
+  cout << n1 << n2 << endl;
+  cout << w1 << w2 << endl;
+  $\tikzmark{tswap3}$tswap (w1,w2);$\tikzmark{tswap4}$
+  cout << w1 << w2 << endl;
+  return 0;
+}
+\end{lstlisting}
+
+\begin{tikzpicture}[overlay,remember picture]
+  \highlight<1,2>{tswap1}{tswap2}
+  \highlight<1,2>{tswap3}{tswap4}
+  \node (comment) [comment, text width=4cm] at (.75\textwidth, .7\textheight) {%
+    T is replaced by \only<1>{\lstinline$int$}\only<2>{\lstinline$string$}
+  };
+  \path<1>[black, line width=2pt, ->] (comment.south) edge [out=270, in=0] (tswap2.east);
+  \path<2>[black, line width=2pt, ->] (comment.south) edge [out=270, in=0] (tswap4.east);
+\end{tikzpicture}
+
+\end{frame}
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+
+
+\begin{frame}[fragile]{Minimum template function}
+
+An example of a template function that finds the smallest element in
+an array.
+
+\begin{lstlisting}
+// PRE: =, < is defined on T
+// PRE: size > 0
+// POST: return smallest element in array
+template <typename T>
+T tmin (T array[], int size) {
+  T min = array[0];
+
+  for (int k = 0; k < size; k++)
+    if (array[k] < min)
+      min = array[k];
+
+  return min;
+}
+\end{lstlisting}
+
+\end{frame}
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+
+\begin{frame}[fragile]{Memory size template function}
+
+An example of a template function that determines if two objects are
+the same size.
+
+\begin{lstlisting}[style=eclipse]
+// POST: return true if sizes are same
+template <typename T1, typename T2>
+bool tEqual (const T1& var1, const T2& var2) {
+  return (sizeof(var1) == sizeof(var2));
+}
+\end{lstlisting}
+\end{frame}
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+
+\begin{frame}[fragile]{Templated class}
+
+Classes can also be templated in C++.
+
+\begin{lstlisting}[style=eclipse]
+template <typeneame T>
+class TStack {
+public:
+  TStack();
+  TStack (int s);
+  $\tikzmark{cc1}$TStack(const TStack& other);$\tikzmark{cc2}$
+  ~TStack();
+  void push (const T& item);
+  T top () const;
+  /* Additional methods */
+private:
+  T * array;
+  int capacity;
+  int size;
+};
+\end{lstlisting}
+
+
+\begin{tikzpicture}[overlay,remember picture]
+  \balloon<1>{cc1}{cc2};
+  \node (comment) [comment, text width=5cm] at (.75\textwidth, .3\textheight) {%
+    The copy constructor uses pass-by-reference instead of pass-by-value. Why?
+  };
+  \path<1>[black, line width=2pt, ->] (comment.north) edge [out=90, in=0] (balloon.east);
+\end{tikzpicture}
+
+\end{frame}
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+
+
+\begin{frame}[fragile]{Constructor examples}
+
+Each constructor is defined as a template.
+
+\begin{lstlisting}
+template <typename T>
+TStack<T>::TStack () {
+  capacity = 10;
+  array = $\bh$new T[capacity];$\eh\tikzmark{new1}$
+  size = 0;
+}
+
+template <typename T>
+TStack<T>::TStack (int s) { 
+  capacity = s;
+  array = $\bh$new T[capacity];$\eh\tikzmark{new2}$
+  size = 0;
+}
+\end{lstlisting}
+
+
+\begin{tikzpicture}[overlay,remember picture]
+  \node (comment) [comment, text width=5cm] at (.8\textwidth,
+  .35\textheight) { Note: The capacity instance variable is OK even
+    though it is not a constant because memory is allocated on the
+    heap.
+  };
+  \path<1>[black, line width=2pt, ->] (comment.west) edge [out=180, in=0] (new1.east);
+  \path<1>[black, line width=2pt, ->] (comment.south) edge [out=270, in=0] (new2.east);
+\end{tikzpicture}
+
+\end{frame}
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+
+
+\begin{frame}[fragile]{Copy Constructor}
+
+\begin{itemize}
+\item The copy constructor uses pass-by-reference. 
+\item The constructor has access to all of the private variables in the other instance.
+\end{itemize}
+
+\begin{lstlisting}[style=eclipse]
+template <typename T>
+TStack<T>::TStack(const TStack& other) {
+  capacity = other.capacity;
+  size = other.size;
+  array = new T[capacity];
+  for (int k = 0; k < size; k++)
+  array[k] = other.array[k];
+}
+\end{lstlisting}
+
+\end{frame}
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+
+
+\begin{frame}[fragile]{Push method}
+
+\begin{lstlisting}[style=eclipse]
+template <typename T>
+TStack<T>::push (int item) {
+  $\tikzmark{push1}$if (capacity == size) {$\tikzmark{push2}$
+    capacity = 2 * capacity;
+    $\tikzmark{push3}$T * temp = new T[capacity];$\tikzmark{push4}$
+    for (int k = 0; k < size; k++)
+      $\tikzmark{push5}$temp[k] = array[k];$\tikzmark{push6}$
+    $\tikzmark{push7}$delete [] array;$\tikzmark{push8}$
+    array = temp;
+  }
+  array[size] = item;
+  size++;
+}
+\end{lstlisting}
+
+\begin{tikzpicture}[overlay,remember picture]
+  \highlight<1>{push1}{push2};
+  \highlight<2>{push3}{push4}; 
+  \highlight<3>{push5}{push6}; 
+  \highlight<4>{push7}{push8}; 
+\end{tikzpicture}
+The push method first checks if the array is full. \pause If so, it
+creates a new array of twice the size, \pause copies elements, \pause and deletes
+the old array.
+
+
+
+\end{frame}
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+
+
+
+\end{document}
+
+%  LocalWords:  swapints swapstrings swapint swapstring ie cout tswap
+%  LocalWords:  typename Templated iostream endl PRE tmin bool tEqual
+%  LocalWords:  const sizeof templated typeneame TStack
