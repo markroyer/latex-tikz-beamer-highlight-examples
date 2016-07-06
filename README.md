@@ -9,8 +9,9 @@ code in beamer slides using tikz and a
 
 ## Examples
 
-The document shows a couple of ways to perform code highlighting.  A
-technique for pointing to code is also given.
+The document shows a few techniques for code highlighting in latex
+documents using tikz.  Approaches for pointing to code segments are
+also given.  Some example images are shown below.
 
 ![Pointing and Highlighting](https://raw.githubusercontent.com/wiki/markroyer/latex-tikz-beamer-highlight-examples/pointAndHighlight1.png
 "Pointing and Highlighting 1")
