@@ -12,7 +12,17 @@ code in beamer slides using tikz and a
 The document shows a couple of ways to perform code highlighting.  A
 technique for pointing to code is also given.
 
+![Pointing and Highlighting](https://raw.githubusercontent.com/wiki/markroyer/latex-tikz-beamer-highlight-examples/pointAndHighlight1.png
+"Pointing and Highlighting 1")
 
+![Pointing and Highlighting](https://raw.githubusercontent.com/wiki/markroyer/latex-tikz-beamer-highlight-examples/pointAndHighlight2.png
+"Pointing and Highlighting 2")
+
+![Pointing and Highlighting](https://raw.githubusercontent.com/wiki/markroyer/latex-tikz-beamer-highlight-examples/pointAndHighlight3.png
+"Pointing and Highlighting 3")
+
+![Highlighting](https://raw.githubusercontent.com/wiki/markroyer/latex-tikz-beamer-highlight-examples/highlight1.png
+ "Highlighting")
 
 ## Setup
 
@@ -41,3 +51,6 @@ will remove all generated files.
 
 The project is licensed under the terms of the
 [GPL3](https://www.gnu.org/licenses/gpl-3.0.en.html) license.
+
+<!--  LocalWords:  tikz beamer tex texlive pdf GPL
+ -->
