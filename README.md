@@ -1,6 +1,6 @@
 # latex-tikz-beamer-highlight-examples
 
-Some examples latex slides using tikz and beamer to point to and
+Some example latex slides using tikz and beamer to point to and
 highlight code.
 
 The `templates.tex` file contains a number examples of referring to
