@@ -31,7 +31,7 @@ Make sure that you have the Debian `texlive` package installed.
 
 ## Usage
 
-You can build the syllabus by typing
+You can build the PDF document by typing
 
 ```
 make
